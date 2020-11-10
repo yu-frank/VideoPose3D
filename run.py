@@ -403,15 +403,15 @@ if not args.evaluate:
         else:
             # Regular supervised scenario
             print('fully-supervise')
-            training_counter = 0
+            # training_counter = 0
             
             for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
 
-                training_counter += 1
-                if training_counter == 10:
-                    break
-                print(training_counter)
-                
+                # training_counter += 1
+                # if training_counter == 10:
+                #     break
+                # print(training_counter)
+
                 inputs_3d = torch.from_numpy(batch_3d.astype('float32'))
                 inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
                 if torch.cuda.is_available():
