@@ -48,6 +48,9 @@ elif args.dataset.startswith('custom'):
 else:
     raise KeyError('Invalid dataset')
 
+use_pcl = args.use_pcl
+print('Use PCL: ', use_pcl)
+
 print('Preparing data...')
 for subject in dataset.subjects():
     for action in dataset[subject].keys():
@@ -223,7 +226,7 @@ if args.resume or args.evaluate:
     
 test_generator = UnchunkedGenerator(cameras_valid, poses_valid, poses_valid_2d,
                                     pad=pad, causal_shift=causal_shift, augment=False,
-                                    kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
+                                    kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
 print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
 
 if not args.evaluate:
@@ -276,9 +279,9 @@ if not args.evaluate:
     
     train_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_train, poses_train, poses_train_2d, args.stride,
                                        pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
-                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
+                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
     train_generator_eval = UnchunkedGenerator(cameras_train, poses_train, poses_train_2d,
-                                              pad=pad, causal_shift=causal_shift, augment=False)
+                                              pad=pad, causal_shift=causal_shift, augment=False, use_pcl=use_pcl)
     print('INFO: Training on {} frames'.format(train_generator_eval.num_frames()))
     if semi_supervised:
         semi_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_semi, None, poses_semi_2d, args.stride,
@@ -400,12 +403,15 @@ if not args.evaluate:
         else:
             # Regular supervised scenario
             print('fully-supervise')
-            # training_counter = 0
+            training_counter = 0
+            
             for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
-                # training_counter += 1
-                # if training_counter == 10:
-                #     break
-                # print(training_counter)
+
+                training_counter += 1
+                if training_counter == 10:
+                    break
+                print(training_counter)
+                
                 inputs_3d = torch.from_numpy(batch_3d.astype('float32'))
                 inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
                 if torch.cuda.is_available():
