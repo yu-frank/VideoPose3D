@@ -7,6 +7,9 @@
 
 from itertools import zip_longest
 import numpy as np
+import  common.pcl_dataloader_helper as pdh
+import torch
+import common.pcl as pcl
 
 class ChunkedGenerator:
     """
@@ -140,6 +143,55 @@ class ChunkedGenerator:
                             self.batch_3d[i, :, self.joints_left + self.joints_right] = \
                                     self.batch_3d[i, :, self.joints_right + self.joints_left]
 
+
+                    """THIS IS THE PCL CODE!"""
+                    pose2d_pt = torch.from_numpy(self.batch_2d[i].astype('float32'))
+                    pose2d_px = (pose2d_pt + 1) / 2 * 1000
+                    middle_index = pose2d_pt.shape[0]//2
+                    pose2d_middle = pose2d_px[middle_index]
+                    
+                    scale = pdh.generate_gt_scales_from2d(pose2d_middle).unsqueeze(0)
+                    location = pose2d_middle[0,:].unsqueeze(0)
+                    Ks_px_orig = torch.FloatTensor([
+                        [1.145e3, 0, 5.0e2],
+                        [0, 1.145e3, 5.0e2],
+                        [0,    0,   1]
+                    ]).unsqueeze(0)
+
+                    P_virt2orig, R_virt2orig, K_virt = pcl.pcl_transforms(location, scale, Ks_px_orig,\
+                         focal_at_image_plane=True, slant_compensation=True)
+                    
+                    bs = pose2d_px.shape[0]
+                    num_joints = pose2d_px.shape[1]
+                    ones = torch.ones([bs, num_joints, 1])
+                    h_canon_label_2d = torch.cat((pose2d_px, ones), dim=-1).unsqueeze(-1)
+                    P_orig2virt = torch.inverse(P_virt2orig)
+                    # prep sizes for bmm (bxNxM) where N and M are matrix dimensions
+                    P_orig2virt = P_orig2virt.unsqueeze(1).repeat(bs, num_joints, 1, 1)
+                    P_orig2virt = P_orig2virt.view(bs*num_joints, 3, 3)
+                    h_canon_label_2d = h_canon_label_2d.view(bs*num_joints, 3, 1)
+
+                    # transform homogenous labels to virtual homogeneous labels
+                    h_canon_virt_2d = torch.bmm(P_orig2virt, h_canon_label_2d)
+                    h_canon_virt_2d = h_canon_virt_2d.squeeze(-1).view(bs, num_joints, -1)
+
+                    # Convert from homogeneous coordinate by dividing x and y by z
+                    pose2d_virt = torch.div(h_canon_virt_2d[:,:,:-1], h_canon_virt_2d[:,:,-1].unsqueeze(-1))
+                    pose2d_pt_pcl = pose2d_virt * 2 -1 
+                    temp = pose2d_pt_pcl[middle_index]
+                    self.batch_2d[i] = pose2d_pt_pcl.numpy()
+
+                    pose3d_pt = torch.from_numpy(self.batch_3d[i].astype('float32'))
+                    pose3d_pt = pose3d_pt - pose3d_pt[:,0] # 0 should be the hip joint
+                    R_orig2virt = torch.inverse(R_virt2orig)
+                    R_orig2virt = R_orig2virt.unsqueeze(1).repeat(1, num_joints, 1, 1) #Repeats along 2nd dimension 16 times and for each seq
+                    pose3d_pt = pose3d_pt.unsqueeze(3).view(1*num_joints, 3, 1)
+                    R_orig2virt = R_orig2virt.view(1*num_joints, 3, 3)
+                    pose3d_pt_pcl = torch.bmm(R_orig2virt, pose3d_pt)
+                    pose3d_pt_pcl = pose3d_pt_pcl.squeeze(-1).view(1, num_joints, 3)
+
+                    self.batch_3d[i] = pose3d_pt_pcl.numpy()
+
                     # Cameras
                     if self.cameras is not None:
                         self.batch_cam[i] = self.cameras[seq_i]
@@ -216,8 +268,60 @@ class UnchunkedGenerator:
     def next_epoch(self):
         for seq_cam, seq_3d, seq_2d in zip_longest(self.cameras, self.poses_3d, self.poses_2d):
             batch_cam = None if seq_cam is None else np.expand_dims(seq_cam, axis=0)
-            batch_3d = None if seq_3d is None else np.expand_dims(seq_3d, axis=0)
-            batch_2d = np.expand_dims(np.pad(seq_2d,
+
+            """INSERT PCL CODE HERE"""
+            pose2d_pt = torch.from_numpy(seq_2d.astype('float32'))
+            pose2d_px = (pose2d_pt + 1) / 2 * 1000
+            # middle_index = pose2d_pt.shape[0]//2
+            # pose2d_middle = pose2d_px[middle_index]
+            temp = pose2d_px[0,:,:]
+            scale = pdh.generate_batch_gt_scales_from2d(pose2d_px)
+            location = pose2d_px[:,0,:]
+            Ks_px_orig = torch.FloatTensor([
+                [1.145e3, 0, 5.0e2],
+                [0, 1.145e3, 5.0e2],
+                [0,    0,   1]
+            ]).unsqueeze(0).repeat(scale.shape[0],1,1)
+
+            P_virt2orig, R_virt2orig, K_virt = pcl.pcl_transforms(location, scale, Ks_px_orig,\
+                    focal_at_image_plane=True, slant_compensation=True)
+            
+            bs = pose2d_px.shape[0]
+            num_joints = pose2d_px.shape[1]
+            ones = torch.ones([bs, num_joints, 1])
+            h_canon_label_2d = torch.cat((pose2d_px, ones), dim=-1).unsqueeze(-1)
+            P_orig2virt = torch.inverse(P_virt2orig)
+            # prep sizes for bmm (bxNxM) where N and M are matrix dimensions
+            P_orig2virt = P_orig2virt.unsqueeze(1).repeat(1, num_joints, 1, 1)
+            P_orig2virt = P_orig2virt.view(bs*num_joints, 3, 3)
+            h_canon_label_2d = h_canon_label_2d.view(bs*num_joints, 3, 1)
+
+            # transform homogenous labels to virtual homogeneous labels
+            h_canon_virt_2d = torch.bmm(P_orig2virt, h_canon_label_2d)
+            h_canon_virt_2d = h_canon_virt_2d.squeeze(-1).view(bs, num_joints, -1)
+
+            # Convert from homogeneous coordinate by dividing x and y by z
+            pose2d_virt = torch.div(h_canon_virt_2d[:,:,:-1], h_canon_virt_2d[:,:,-1].unsqueeze(-1))
+            pose2d_pt_pcl = pose2d_virt * 2 -1 
+            temp = pose2d_pt_pcl[0]
+
+            pose2d_pt_pcl = pose2d_pt_pcl.numpy() # RETURN THIS!
+
+            pose3d_pt = torch.from_numpy(seq_3d.astype('float32'))
+            hips = pose3d_pt[:,0,:].unsqueeze(1).repeat(1, 17, 1)
+            pose3d_pt = pose3d_pt - hips  # 0 should be the hip joint
+            R_orig2virt = torch.inverse(R_virt2orig)
+            R_orig2virt = R_orig2virt.unsqueeze(1).repeat(1, num_joints, 1, 1) #Repeats along 2nd dimension 16 times and for each seq
+            pose3d_pt = pose3d_pt.unsqueeze(3).reshape(bs*num_joints, 3, 1)
+            R_orig2virt = R_orig2virt.view(bs*num_joints, 3, 3)
+            pose3d_pt_pcl = torch.bmm(R_orig2virt, pose3d_pt)
+            pose3d_pt_pcl = pose3d_pt_pcl.squeeze(-1).view(bs, num_joints, 3)
+
+            pose3d_pt_pcl = pose3d_pt_pcl.numpy() # RETURN THIS!
+
+
+            batch_3d = None if pose3d_pt_pcl is None else np.expand_dims(pose3d_pt_pcl, axis=0)
+            batch_2d = np.expand_dims(np.pad(pose2d_pt_pcl,
                             ((self.pad + self.causal_shift, self.pad - self.causal_shift), (0, 0), (0, 0)),
                             'edge'), axis=0)
             if self.augment:

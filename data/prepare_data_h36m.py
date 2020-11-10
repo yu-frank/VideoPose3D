@@ -119,7 +119,9 @@ if __name__ == '__main__':
         
         for subject in subjects:
             output[subject] = {}
-            file_list = glob(args.from_source_cdf + '/' + subject + '/MyPoseFeatures/D3_Positions/*.cdf')
+            # file_list = glob(args.from_source_cdf + '/' + subject + '/MyPoseFeatures/D3_Positions/*.cdf')
+            file_list = glob(args.from_source_cdf + '/' + subject + '/MyPoseFeatures/Poses_D3_Positions/*.cdf')
+
             assert len(file_list) == 30, "Expected 30 files for subject " + subject + ", got " + str(len(file_list))
             for f in file_list:
                 action = os.path.splitext(os.path.basename(f))[0]

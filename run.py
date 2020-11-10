@@ -317,6 +317,7 @@ if not args.evaluate:
         N_semi = 0
         model_pos_train.train()
         if semi_supervised:
+            print('semi-supervise')
             # Semi-supervised scenario
             model_traj_train.train()
             for (_, batch_3d, batch_2d), (cam_semi, _, batch_2d_semi) in \
@@ -398,7 +399,13 @@ if not args.evaluate:
             losses_2d_train_unlabeled.append(epoch_loss_2d_train_unlabeled / N_semi)
         else:
             # Regular supervised scenario
-            for _, batch_3d, batch_2d in train_generator.next_epoch():
+            print('fully-supervise')
+            training_counter = 0
+            for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
+                training_counter += 1
+                if training_counter == 10:
+                    break
+                print(training_counter)
                 inputs_3d = torch.from_numpy(batch_3d.astype('float32'))
                 inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
                 if torch.cuda.is_available():
