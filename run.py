@@ -512,75 +512,75 @@ if not args.evaluate:
                 epoch_loss_traj_train_eval = 0
                 epoch_loss_2d_train_labeled_eval = 0
                 N = 0
-                for cam, batch, batch_2d in train_generator_eval.next_epoch():
-                    if batch_2d.shape[1] == 0:
-                        # This can only happen when downsampling the dataset
-                        continue
+                # for cam, batch, batch_2d in train_generator_eval.next_epoch():
+                #     if batch_2d.shape[1] == 0:
+                #         # This can only happen when downsampling the dataset
+                #         continue
                    
                         
-                    inputs_3d = torch.from_numpy(batch.astype('float32'))
-                    inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
-                    if torch.cuda.is_available():
-                        inputs_3d = inputs_3d.cuda()
-                        inputs_2d = inputs_2d.cuda()
-                    inputs_traj = inputs_3d[:, :, :1].clone()
-                    inputs_3d[:, :, 0] = 0
+                #     inputs_3d = torch.from_numpy(batch.astype('float32'))
+                #     inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
+                #     if torch.cuda.is_available():
+                #         inputs_3d = inputs_3d.cuda()
+                #         inputs_2d = inputs_2d.cuda()
+                #     inputs_traj = inputs_3d[:, :, :1].clone()
+                #     inputs_3d[:, :, 0] = 0
 
-                    # Compute 3D poses
-                    predicted_3d_pos = model_pos(inputs_2d)
-                    loss_3d_pos = mpjpe(predicted_3d_pos, inputs_3d)
-                    epoch_loss_3d_train_eval += inputs_3d.shape[0]*inputs_3d.shape[1] * loss_3d_pos.item()
-                    N += inputs_3d.shape[0]*inputs_3d.shape[1]
+                #     # Compute 3D poses
+                #     predicted_3d_pos = model_pos(inputs_2d)
+                #     loss_3d_pos = mpjpe(predicted_3d_pos, inputs_3d)
+                #     epoch_loss_3d_train_eval += inputs_3d.shape[0]*inputs_3d.shape[1] * loss_3d_pos.item()
+                #     N += inputs_3d.shape[0]*inputs_3d.shape[1]
 
-                    # break
+                #     # break
 
-                    if semi_supervised:
-                        cam = torch.from_numpy(cam.astype('float32'))
-                        if torch.cuda.is_available():
-                            cam = cam.cuda()
-                        predicted_traj = model_traj(inputs_2d)
-                        loss_traj = mpjpe(predicted_traj, inputs_traj)
-                        epoch_loss_traj_train_eval += inputs_traj.shape[0]*inputs_traj.shape[1] * loss_traj.item()
-                        assert inputs_traj.shape[0]*inputs_traj.shape[1] == inputs_3d.shape[0]*inputs_3d.shape[1]
+                #     if semi_supervised:
+                #         cam = torch.from_numpy(cam.astype('float32'))
+                #         if torch.cuda.is_available():
+                #             cam = cam.cuda()
+                #         predicted_traj = model_traj(inputs_2d)
+                #         loss_traj = mpjpe(predicted_traj, inputs_traj)
+                #         epoch_loss_traj_train_eval += inputs_traj.shape[0]*inputs_traj.shape[1] * loss_traj.item()
+                #         assert inputs_traj.shape[0]*inputs_traj.shape[1] == inputs_3d.shape[0]*inputs_3d.shape[1]
 
-                        if pad > 0:
-                            target = inputs_2d[:, pad:-pad, :, :2].contiguous()
-                        else:
-                            target = inputs_2d[:, :, :, :2].contiguous()
-                        reconstruction = project_to_2d(predicted_3d_pos + predicted_traj, cam)
-                        loss_reconstruction = mpjpe(reconstruction, target)
-                        epoch_loss_2d_train_labeled_eval += reconstruction.shape[0]*reconstruction.shape[1] * loss_reconstruction.item()
-                        assert reconstruction.shape[0]*reconstruction.shape[1] == inputs_3d.shape[0]*inputs_3d.shape[1]
+                #         if pad > 0:
+                #             target = inputs_2d[:, pad:-pad, :, :2].contiguous()
+                #         else:
+                #             target = inputs_2d[:, :, :, :2].contiguous()
+                #         reconstruction = project_to_2d(predicted_3d_pos + predicted_traj, cam)
+                #         loss_reconstruction = mpjpe(reconstruction, target)
+                #         epoch_loss_2d_train_labeled_eval += reconstruction.shape[0]*reconstruction.shape[1] * loss_reconstruction.item()
+                #         assert reconstruction.shape[0]*reconstruction.shape[1] == inputs_3d.shape[0]*inputs_3d.shape[1]
 
-                losses_3d_train_eval.append(epoch_loss_3d_train_eval / N)
-                if semi_supervised:
-                    losses_traj_train_eval.append(epoch_loss_traj_train_eval / N)
-                    losses_2d_train_labeled_eval.append(epoch_loss_2d_train_labeled_eval / N)
+                # losses_3d_train_eval.append(epoch_loss_3d_train_eval / N)
+                # if semi_supervised:
+                #     losses_traj_train_eval.append(epoch_loss_traj_train_eval / N)
+                #     losses_2d_train_labeled_eval.append(epoch_loss_2d_train_labeled_eval / N)
 
-                # Evaluate 2D loss on unlabeled training set (in evaluation mode)
-                epoch_loss_2d_train_unlabeled_eval = 0
-                N_semi = 0
-                if semi_supervised:
-                    for cam, _, batch_2d in semi_generator_eval.next_epoch():
-                        cam = torch.from_numpy(cam.astype('float32'))
-                        inputs_2d_semi = torch.from_numpy(batch_2d.astype('float32'))
-                        if torch.cuda.is_available():
-                            cam = cam.cuda()
-                            inputs_2d_semi = inputs_2d_semi.cuda()
+                # # Evaluate 2D loss on unlabeled training set (in evaluation mode)
+                # epoch_loss_2d_train_unlabeled_eval = 0
+                # N_semi = 0
+                # if semi_supervised:
+                #     for cam, _, batch_2d in semi_generator_eval.next_epoch():
+                #         cam = torch.from_numpy(cam.astype('float32'))
+                #         inputs_2d_semi = torch.from_numpy(batch_2d.astype('float32'))
+                #         if torch.cuda.is_available():
+                #             cam = cam.cuda()
+                #             inputs_2d_semi = inputs_2d_semi.cuda()
 
-                        predicted_3d_pos_semi = model_pos(inputs_2d_semi)
-                        predicted_traj_semi = model_traj(inputs_2d_semi)
-                        if pad > 0:
-                            target_semi = inputs_2d_semi[:, pad:-pad, :, :2].contiguous()
-                        else:
-                            target_semi = inputs_2d_semi[:, :, :, :2].contiguous()
-                        reconstruction_semi = project_to_2d(predicted_3d_pos_semi + predicted_traj_semi, cam)
-                        loss_reconstruction_semi = mpjpe(reconstruction_semi, target_semi)
+                #         predicted_3d_pos_semi = model_pos(inputs_2d_semi)
+                #         predicted_traj_semi = model_traj(inputs_2d_semi)
+                #         if pad > 0:
+                #             target_semi = inputs_2d_semi[:, pad:-pad, :, :2].contiguous()
+                #         else:
+                #             target_semi = inputs_2d_semi[:, :, :, :2].contiguous()
+                #         reconstruction_semi = project_to_2d(predicted_3d_pos_semi + predicted_traj_semi, cam)
+                #         loss_reconstruction_semi = mpjpe(reconstruction_semi, target_semi)
 
-                        epoch_loss_2d_train_unlabeled_eval += reconstruction_semi.shape[0]*reconstruction_semi.shape[1] \
-                                                              * loss_reconstruction_semi.item()
-                        N_semi += reconstruction_semi.shape[0]*reconstruction_semi.shape[1]
-                    losses_2d_train_unlabeled_eval.append(epoch_loss_2d_train_unlabeled_eval / N_semi)
+                #         epoch_loss_2d_train_unlabeled_eval += reconstruction_semi.shape[0]*reconstruction_semi.shape[1] \
+                #                                               * loss_reconstruction_semi.item()
+                #         N_semi += reconstruction_semi.shape[0]*reconstruction_semi.shape[1]
+                #     losses_2d_train_unlabeled_eval.append(epoch_loss_2d_train_unlabeled_eval / N_semi)
 
         elapsed = (time() - start_time)/60
         
@@ -606,13 +606,23 @@ if not args.evaluate:
                         losses_2d_train_unlabeled_eval[-1],
                         losses_2d_valid[-1]))
             else:
-                print('[%d] time %.2f lr %f 3d_train %f 3d_eval %f 3d_valid %f' % (
+                print('[%d] time %.2f lr %f 3d_train %f 3d_valid %f' % (
                         epoch + 1,
                         elapsed,
                         lr,
                         losses_3d_train[-1] * 1000,
-                        losses_3d_train_eval[-1] * 1000,
+                        # losses_3d_train_eval[-1] * 1000,
                         losses_3d_valid[-1]  *1000))
+
+                text_file = open(os.path.join(args.checkpoint, 'log.txt'), "a+")
+                text_file.write('[%d] time %.2f lr %f 3d_train %f 3d_valid %f \n' % (
+                        epoch + 1,
+                        elapsed,
+                        lr,
+                        losses_3d_train[-1] * 1000,
+                        # losses_3d_train_eval[-1] * 1000,
+                        losses_3d_valid[-1]  *1000))
+                text_file.close()
         
         # Decay learning rate exponentially
         lr *= lr_decay
@@ -642,7 +652,7 @@ if not args.evaluate:
             }, chk_path)
             
         # Save training curves after every epoch, as .png images (if requested)
-        if True and epoch > 3:
+        if True and epoch > 0:
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
@@ -650,9 +660,9 @@ if not args.evaluate:
             plt.figure()
             epoch_x = np.arange(3, len(losses_3d_train)) + 1
             plt.plot(epoch_x, losses_3d_train[3:], '--', color='C0')
-            plt.plot(epoch_x, losses_3d_train_eval[3:], color='C0')
+            # plt.plot(epoch_x, losses_3d_train_eval[3:], color='C0')
             plt.plot(epoch_x, losses_3d_valid[3:], color='C1')
-            plt.legend(['3d train', '3d train (eval)', '3d valid (eval)'])
+            plt.legend(['3d train', '3d valid (eval)'])
             plt.ylabel('MPJPE (m)')
             plt.xlabel('Epoch')
             plt.xlim((3, epoch))

@@ -7,3 +7,4 @@ common/__pycache__/arguments.cpython-36.pyc
 *.pyc
 *.png
 *.bin
+*.txt
