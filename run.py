@@ -760,6 +760,7 @@ if args.render:
                              pad=pad, causal_shift=causal_shift, augment=args.test_time_augmentation,
                              kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
     prediction = evaluate(gen, return_predictions=True)
+    
     if model_traj is not None and ground_truth is None:
         prediction_traj = evaluate(gen, return_predictions=True, use_trajectory_model=True)
         prediction += prediction_traj
@@ -863,9 +864,13 @@ else:
                     continue
 
             poses_act, poses_2d_act = fetch_actions(actions[action_key])
-            gen = UnchunkedGenerator(None, poses_act, poses_2d_act,
-                                     pad=pad, causal_shift=causal_shift, augment=args.test_time_augmentation,
-                                     kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
+            # gen = UnchunkedGenerator(None, poses_act, poses_2d_act,
+            #                          pad=pad, causal_shift=causal_shift, augment=args.test_time_augmentation,
+            #                          kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
+
+            gen = ChunkedGenerator(args.batch_size//args.stride, None, poses_act, poses_2d_act, args.stride,
+                            pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
+                            kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)  
             e1, e2, e3, ev = evaluate(gen, action_key)
             errors_p1.append(e1)
             errors_p2.append(e2)
