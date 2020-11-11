@@ -5,3 +5,5 @@ common/__pycache__/h36m_dataset.cpython-36.pyc
 common/__pycache__/generators.cpython-36.pyc
 common/__pycache__/arguments.cpython-36.pyc
 *.pyc
+*.png
+*.bin
