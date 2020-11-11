@@ -212,7 +212,8 @@ if args.resume or args.evaluate:
     model_pos_train.load_state_dict(checkpoint['model_pos'])
     model_pos.load_state_dict(checkpoint['model_pos'])
     
-    if args.evaluate and 'model_traj' in checkpoint:
+    if 0:
+    # if args.evaluate and 'model_traj' in checkpoint:
         # Load trajectory model if it contained in the checkpoint (e.g. for inference in the wild)
         model_traj = TemporalModel(poses_valid_2d[0].shape[-2], poses_valid_2d[0].shape[-1], 1,
                             filter_widths=filter_widths, causal=args.causal, dropout=args.dropout, channels=args.channels,
