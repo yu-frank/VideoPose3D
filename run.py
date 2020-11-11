@@ -869,7 +869,7 @@ else:
             #                          kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right)
 
             gen = ChunkedGenerator(args.batch_size//args.stride, None, poses_act, poses_2d_act, args.stride,
-                            pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
+                            pad=pad, causal_shift=causal_shift, shuffle=False, augment=args.test_time_augmentation,
                             kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)  
             e1, e2, e3, ev = evaluate(gen, action_key)
             errors_p1.append(e1)
