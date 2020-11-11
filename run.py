@@ -414,14 +414,14 @@ if not args.evaluate:
         else:
             # Regular supervised scenario
             print('fully-supervise')
-            training_counter = 0
+            # training_counter = 0
             
             for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
 
-                training_counter += 1
-                if training_counter == 2:
-                    break
-                print(training_counter)
+                # training_counter += 1
+                # if training_counter == 2:
+                #     break
+                # print(training_counter)
 
                 inputs_3d = torch.from_numpy(batch_3d.astype('float32'))
                 inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
@@ -460,13 +460,13 @@ if not args.evaluate:
             
             if not args.no_eval:
                 # Evaluate on test set
-                eval_counter = 0
+                # eval_counter = 0
                 for cam, batch, batch_2d in test_generator.next_epoch():
 
-                    eval_counter += 1
-                    if eval_counter == 2:
-                        break
-                    print(eval_counter)
+                    # eval_counter += 1
+                    # if eval_counter == 2:
+                    #     break
+                    # print(eval_counter)
 
                     inputs_3d = torch.from_numpy(batch.astype('float32'))
                     inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
@@ -532,7 +532,7 @@ if not args.evaluate:
                     epoch_loss_3d_train_eval += inputs_3d.shape[0]*inputs_3d.shape[1] * loss_3d_pos.item()
                     N += inputs_3d.shape[0]*inputs_3d.shape[1]
 
-                    break
+                    # break
 
                     if semi_supervised:
                         cam = torch.from_numpy(cam.astype('float32'))
