@@ -145,6 +145,12 @@ class ChunkedGenerator:
                             self.batch_3d[i, :, self.joints_left + self.joints_right] = \
                                     self.batch_3d[i, :, self.joints_right + self.joints_left]
 
+
+                    # if i == 0 or i == 1023 or i==200 or i==500 or i==750:
+                    #     pdh.plot_the_skeletons(self.batch_2d[i])
+                    #     pdh.plot_the_skeletons_3d(self.batch_3d[i])
+                    #     before_3d = np.copy(self.batch_3d[i])
+
                     if self.use_pcl:
                         """THIS IS THE PCL CODE!"""
                         pose2d_pt = torch.from_numpy(self.batch_2d[i].astype('float32'))
@@ -183,8 +189,11 @@ class ChunkedGenerator:
                         temp = pose2d_pt_pcl[middle_index]
                         self.batch_2d[i] = pose2d_pt_pcl.numpy()
 
+                        
+                        
+                        """3D TRANSFORMS!"""
                         pose3d_pt = torch.from_numpy(self.batch_3d[i].astype('float32'))
-                        pose3d_pt = pose3d_pt - pose3d_pt[:,0] # 0 should be the hip joint
+                        pose3d_pt[:,0] = 0 # 0 should be the hip joint
                         R_orig2virt = torch.inverse(R_virt2orig)
                         R_orig2virt = R_orig2virt.unsqueeze(1).repeat(1, num_joints, 1, 1) #Repeats along 2nd dimension 16 times and for each seq
                         pose3d_pt = pose3d_pt.unsqueeze(3).view(1*num_joints, 3, 1)
@@ -193,6 +202,11 @@ class ChunkedGenerator:
                         pose3d_pt_pcl = pose3d_pt_pcl.squeeze(-1).view(1, num_joints, 3)
 
                         self.batch_3d[i] = pose3d_pt_pcl.numpy()
+
+                        # if i == 0 or i == 1023 or i==200 or i==500 or i==750:
+                        #     pdh.plot_the_skeletons_3d(self.batch_3d[i])
+                        #     pdh.plot_the_skeletons(self.batch_2d[i])
+                        #     pdh.plot_the_before_after_skeletons_3d(before_3d, self.batch_3d[i])
 
                     # Cameras
                     if self.cameras is not None:
@@ -272,6 +286,9 @@ class UnchunkedGenerator:
     def next_epoch(self):
         for seq_cam, seq_3d, seq_2d in zip_longest(self.cameras, self.poses_3d, self.poses_2d):
             batch_cam = None if seq_cam is None else np.expand_dims(seq_cam, axis=0)
+            
+            # pdh.plot_the_single_skeletons(seq_2d)
+            # pdh.plot_the_single_skeletons_3d(seq_3d)
 
             if self.use_pcl:
                 """INSERT PCL CODE HERE"""
@@ -279,7 +296,7 @@ class UnchunkedGenerator:
                 pose2d_px = (pose2d_pt + 1) / 2 * 1000
                 # middle_index = pose2d_pt.shape[0]//2
                 # pose2d_middle = pose2d_px[middle_index]
-                temp = pose2d_px[0,:,:]
+                # temp = pose2d_px[0,:,:]
                 scale = pdh.generate_batch_gt_scales_from2d(pose2d_px)
                 location = pose2d_px[:,0,:]
                 Ks_px_orig = torch.FloatTensor([
@@ -308,13 +325,12 @@ class UnchunkedGenerator:
                 # Convert from homogeneous coordinate by dividing x and y by z
                 pose2d_virt = torch.div(h_canon_virt_2d[:,:,:-1], h_canon_virt_2d[:,:,-1].unsqueeze(-1))
                 pose2d_pt_pcl = pose2d_virt * 2 -1 
-                temp = pose2d_pt_pcl[0]
+                # temp = pose2d_pt_pcl[0]
 
                 pose2d_pt_pcl = pose2d_pt_pcl.numpy() # RETURN THIS!
 
                 pose3d_pt = torch.from_numpy(seq_3d.astype('float32'))
-                hips = pose3d_pt[:,0,:].unsqueeze(1).repeat(1, 17, 1)
-                pose3d_pt = pose3d_pt - hips  # 0 should be the hip joint
+                pose3d_pt[:,0] = 0 # 0 should be the hip joint
                 R_orig2virt = torch.inverse(R_virt2orig)
                 R_orig2virt = R_orig2virt.unsqueeze(1).repeat(1, num_joints, 1, 1) #Repeats along 2nd dimension 16 times and for each seq
                 pose3d_pt = pose3d_pt.unsqueeze(3).reshape(bs*num_joints, 3, 1)
@@ -324,6 +340,8 @@ class UnchunkedGenerator:
 
                 pose3d_pt_pcl = pose3d_pt_pcl.numpy() # RETURN THIS!
 
+                # pdh.plot_the_single_skeletons(pose2d_pt_pcl)
+                # pdh.plot_the_single_skeletons_3d(pose3d_pt_pcl)
 
                 batch_3d = None if pose3d_pt_pcl is None else np.expand_dims(pose3d_pt_pcl, axis=0)
                 batch_2d = np.expand_dims(np.pad(pose2d_pt_pcl,
@@ -335,7 +353,7 @@ class UnchunkedGenerator:
                 batch_2d = np.expand_dims(np.pad(seq_2d,
                             ((self.pad + self.causal_shift, self.pad - self.causal_shift), (0, 0), (0, 0)),
                             'edge'), axis=0)
-
+            
             if self.augment:
                 # Append flipped version
                 if batch_cam is not None:

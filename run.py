@@ -224,9 +224,14 @@ if args.resume or args.evaluate:
         model_traj = None
         
     
-test_generator = UnchunkedGenerator(cameras_valid, poses_valid, poses_valid_2d,
-                                    pad=pad, causal_shift=causal_shift, augment=False,
-                                    kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
+# test_generator = UnchunkedGenerator(cameras_valid, poses_valid, poses_valid_2d,
+#                                     pad=pad, causal_shift=causal_shift, augment=False,
+#                                     kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
+
+test_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_valid, poses_valid, poses_valid_2d, args.stride,
+                                       pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
+                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)  
+
 print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
 
 if not args.evaluate:
@@ -280,8 +285,13 @@ if not args.evaluate:
     train_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_train, poses_train, poses_train_2d, args.stride,
                                        pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
                                        kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
-    train_generator_eval = UnchunkedGenerator(cameras_train, poses_train, poses_train_2d,
-                                              pad=pad, causal_shift=causal_shift, augment=False, use_pcl=use_pcl)
+    # train_generator_eval = UnchunkedGenerator(cameras_train, poses_train, poses_train_2d,
+    #                                           pad=pad, causal_shift=causal_shift, augment=False, use_pcl=use_pcl)
+
+    train_generator_eval = ChunkedGenerator(args.batch_size//args.stride, cameras_train, poses_train, poses_train_2d, args.stride,
+                                       pad=pad, causal_shift=causal_shift, shuffle=True, augment=args.data_augmentation,
+                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)                                         
+    
     print('INFO: Training on {} frames'.format(train_generator_eval.num_frames()))
     if semi_supervised:
         semi_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_semi, None, poses_semi_2d, args.stride,
@@ -408,7 +418,7 @@ if not args.evaluate:
             for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
 
                 # training_counter += 1
-                # if training_counter == 10:
+                # if training_counter == 2:
                 #     break
                 # print(training_counter)
 
