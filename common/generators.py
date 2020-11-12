@@ -228,15 +228,15 @@ class ChunkedGenerator:
                         # self.batch_2d[i] = self.batch_2d[i] - location_py
 
                         """# Code used for scaling"""
-                        temp = torch.from_numpy(self.batch_2d[i]).cuda()
+                        temp = torch.from_numpy(self.batch_2d[i])
                         middle_index = temp.shape[0]//2
                         middle_pose = temp[middle_index]
                         middle_pose = (middle_pose + 1) / 2 * 1000
                         scale = pdh.generate_gt_scales_from2d(middle_pose).unsqueeze(0)
                         max_scale = torch.max(scale)
-                        new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0).cuda()
+                        new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
                         temp = temp / (new_scale / 1000) / 2
-                        self.batch_2d[i] = temp.cpu().numpy()
+                        self.batch_2d[i] = temp.numpy()
                         
                         
 
