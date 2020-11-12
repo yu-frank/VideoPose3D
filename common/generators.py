@@ -154,6 +154,10 @@ class ChunkedGenerator:
                     if self.use_pcl:
                         """THIS IS THE PCL CODE!"""
                         pose2d_pt = torch.from_numpy(self.batch_2d[i].astype('float32'))
+                        middle_index = pose2d_pt.shape[0]//2
+                        location_py = pose2d_pt[middle_index][0,:]
+                        # location_py = pose2d_pt[:,0,:]
+                        
                         pose2d_px = (pose2d_pt + 1) / 2 * 1000
                         middle_index = pose2d_pt.shape[0]//2
                         pose2d_middle = pose2d_px[middle_index]
@@ -186,7 +190,11 @@ class ChunkedGenerator:
                         # Convert from homogeneous coordinate by dividing x and y by z
                         pose2d_virt = torch.div(h_canon_virt_2d[:,:,:-1], h_canon_virt_2d[:,:,-1].unsqueeze(-1))
                         pose2d_pt_pcl = pose2d_virt * 2 -1 
-                        temp = pose2d_pt_pcl[middle_index]
+                        # temp = pose2d_pt_pcl[middle_index]
+                        """NEW"""
+                        max_scale = torch.max(scale)
+                        new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
+                        pose2d_pt_pcl = (pose2d_pt_pcl * (new_scale / 1000)) + location_py
                         self.batch_2d[i] = pose2d_pt_pcl.numpy()
 
                         
