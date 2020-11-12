@@ -11,6 +11,16 @@ import  common.pcl_dataloader_helper as pdh
 import torch
 import common.pcl as pcl
 
+def generate_gt_scales_from2d(pose_2d):
+    max_y = torch.max(pose_2d[:,1])
+    min_y = torch.min(pose_2d[:,1])
+    max_x = torch.max(pose_2d[:,0])
+    min_x = torch.min(pose_2d[:,0])
+    scale_y = max_y - min_y
+    scale_x = max_x - min_x
+    # scale = torch.max(scale_y, scale_x)
+    return torch.tensor([scale_x, scale_y])
+
 class ChunkedGenerator:
     """
     Batched data generator, used for training.
@@ -232,7 +242,7 @@ class ChunkedGenerator:
                         middle_index = temp.shape[0]//2
                         middle_pose = temp[middle_index]
                         middle_pose = (middle_pose + 1) / 2 * 1000
-                        scale = pdh.generate_gt_scales_from2d(middle_pose).unsqueeze(0)
+                        scale = generate_gt_scales_from2d(middle_pose).unsqueeze(0)
                         max_scale = torch.max(scale)
                         new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
                         temp = temp / (new_scale / 1000) / 2
