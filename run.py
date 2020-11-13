@@ -416,15 +416,21 @@ if not args.evaluate:
             print('fully-supervise')
             # training_counter = 0
             
-            for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
+            train_generator.next_epoch()
+            train_loader = torch.utils.data.DataLoader(train_generator, batch_size=1, shuffle=False, num_workers=6)
+            for i, data in enumerate(train_loader):
+                batch_cameras, batch_3d, batch_2d = data
+            #for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
 
                 # training_counter += 1
                 # if training_counter == 2:
                 #     break
                 # print(training_counter)
-
-                inputs_3d = torch.from_numpy(batch_3d.astype('float32'))
-                inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
+                inputs_3d = batch_3d.squeeze(0)
+                inputs_2d = batch_2d.squeeze(0)
+                # inputs_3d = torch.from_numpy(batch_3d.astype('float32')).squeeze(0)
+                # inputs_2d = torch.from_numpy(batch_2d.astype('float32')).squeeze(0)
+                inputs_3d
                 if torch.cuda.is_available():
                     inputs_3d = inputs_3d.cuda()
                     inputs_2d = inputs_2d.cuda()
@@ -461,15 +467,20 @@ if not args.evaluate:
             if not args.no_eval:
                 # Evaluate on test set
                 # eval_counter = 0
-                for cam, batch, batch_2d in test_generator.next_epoch():
+                test_generator.next_epoch()
+                validation_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=6)
+                for i, data in enumerate(validation_loader):
+                # for cam, batch, batch_2d in test_generator.next_epoch():
 
                     # eval_counter += 1
                     # if eval_counter == 2:
                     #     break
                     # print(eval_counter)
-
-                    inputs_3d = torch.from_numpy(batch.astype('float32'))
-                    inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
+                    batch_cameras, batch_3d, batch_2d = data
+                    inputs_3d = batch_3d.squeeze(0)
+                    inputs_2d = batch_2d.squeeze(0)
+                    # inputs_3d = torch.from_numpy(batch.astype('float32'))
+                    # inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
                     if torch.cuda.is_available():
                         inputs_3d = inputs_3d.cuda()
                         inputs_2d = inputs_2d.cuda()
@@ -703,8 +714,14 @@ def evaluate(test_generator, action=None, return_predictions=False, use_trajecto
         else:
             model_traj.eval()
         N = 0
-        for _, batch, batch_2d in test_generator.next_epoch():
-            inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
+        test_generator.next_epoch()
+        test_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=6)
+        for i, data in enumerate(test_loader):
+        # for _, batch, batch_2d in test_generator.next_epoch():
+            # inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
+            batch_cameras, batch_3d, batch_2d = data
+            inputs_3d = batch_3d.squeeze(0)
+            inputs_2d = batch_2d.squeeze(0)
             if torch.cuda.is_available():
                 inputs_2d = inputs_2d.cuda()
 
@@ -725,7 +742,7 @@ def evaluate(test_generator, action=None, return_predictions=False, use_trajecto
             if return_predictions:
                 return predicted_3d_pos.squeeze(0).cpu().numpy()
                 
-            inputs_3d = torch.from_numpy(batch.astype('float32'))
+            # inputs_3d = torch.from_numpy(batch.astype('float32'))
             if torch.cuda.is_available():
                 inputs_3d = inputs_3d.cuda()
             inputs_3d[:, :, 0] = 0    
