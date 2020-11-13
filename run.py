@@ -51,6 +51,9 @@ else:
 use_pcl = args.use_pcl
 print('Use PCL: ', use_pcl)
 
+num_workers = args.num_workers
+print('Num Workers: ', num_workers)
+
 print('Preparing data...')
 for subject in dataset.subjects():
     for action in dataset[subject].keys():
@@ -417,7 +420,7 @@ if not args.evaluate:
             # training_counter = 0
             
             train_generator.next_epoch()
-            train_loader = torch.utils.data.DataLoader(train_generator, batch_size=1, shuffle=False, num_workers=6)
+            train_loader = torch.utils.data.DataLoader(train_generator, batch_size=1, shuffle=False, num_workers=num_workers)
             for i, data in enumerate(train_loader):
                 batch_cameras, batch_3d, batch_2d = data
             #for batch_cameras, batch_3d, batch_2d in train_generator.next_epoch():
@@ -468,7 +471,7 @@ if not args.evaluate:
                 # Evaluate on test set
                 # eval_counter = 0
                 test_generator.next_epoch()
-                validation_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=6)
+                validation_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=num_workers)
                 for i, data in enumerate(validation_loader):
                 # for cam, batch, batch_2d in test_generator.next_epoch():
 
@@ -715,11 +718,11 @@ def evaluate(test_generator, action=None, return_predictions=False, use_trajecto
             model_traj.eval()
         N = 0
         test_generator.next_epoch()
-        test_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=6)
+        test_loader = torch.utils.data.DataLoader(test_generator, batch_size=1, shuffle=False, num_workers=num_workers)
         for i, data in enumerate(test_loader):
         # for _, batch, batch_2d in test_generator.next_epoch():
             # inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
-            batch_cameras, batch_3d, batch_2d = data
+            batch_3d, batch_2d = data
             inputs_3d = batch_3d.squeeze(0)
             inputs_2d = batch_2d.squeeze(0)
             if torch.cuda.is_available():

@@ -217,33 +217,34 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                 pose3d_pt_pcl = pose3d_pt_pcl.squeeze(-1).view(1, num_joints, 3)
 
                 self.batch_3d[i] = pose3d_pt_pcl.numpy()
+                
                 # if i == 0 or i == 1023 or i==200 or i==500 or i==750:
                 #     pdh.plot_the_skeletons_3d(self.batch_3d[i])
                 #     pdh.plot_the_skeletons(self.batch_2d[i])
                 #     pdh.plot_the_before_after_skeletons_3d(before_3d, self.batch_3d[i])
 
 
-            if not self.use_pcl:
-                """# Code used for centering"""
-                # temp = self.batch_2d[i]
-                # middle_index = temp.shape[0]//2
-                # location_py = temp[middle_index][0,:]
-                # location_py = np.expand_dims(location_py, 0)
-                # location_py = np.expand_dims(location_py, 0)
-                # location_py = np.repeat(location_py, temp.shape[1], 1)
-                # location_py = np.repeat(location_py, temp.shape[0], 0)
-                # self.batch_2d[i] = self.batch_2d[i] - location_py
+            # if not self.use_pcl:
+            #     """# Code used for centering"""
+            #     # temp = self.batch_2d[i]
+            #     # middle_index = temp.shape[0]//2
+            #     # location_py = temp[middle_index][0,:]
+            #     # location_py = np.expand_dims(location_py, 0)
+            #     # location_py = np.expand_dims(location_py, 0)
+            #     # location_py = np.repeat(location_py, temp.shape[1], 1)
+            #     # location_py = np.repeat(location_py, temp.shape[0], 0)
+            #     # self.batch_2d[i] = self.batch_2d[i] - location_py
 
-                """# Code used for scaling"""
-                temp = torch.from_numpy(self.batch_2d[i]) #.cuda()
-                middle_index = temp.shape[0]//2
-                middle_pose = temp[middle_index]
-                middle_pose = (middle_pose + 1) / 2 * 1000
-                scale = pdh.generate_gt_scales_from2d(middle_pose).unsqueeze(0)
-                max_scale = torch.max(scale)
-                new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
-                temp = temp / (new_scale / 1000) / 2
-                self.batch_2d[i] = temp.numpy() # remove .numpy()
+            #     """# Code used for scaling"""
+            #     temp = torch.from_numpy(self.batch_2d[i]) #.cuda()
+            #     middle_index = temp.shape[0]//2
+            #     middle_pose = temp[middle_index]
+            #     middle_pose = (middle_pose + 1) / 2 * 1000
+            #     scale = pdh.generate_gt_scales_from2d(middle_pose).unsqueeze(0)
+            #     max_scale = torch.max(scale)
+            #     new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
+            #     temp = temp / (new_scale / 1000) / 2
+            #     self.batch_2d[i] = temp.numpy() # remove .numpy()
                 
                 
 
@@ -268,7 +269,8 @@ class ChunkedGenerator(torch.utils.data.Dataset):
         if self.poses_3d is None and self.cameras is None:
             return None, None, self.batch_2d[:len(chunks)]
         elif self.poses_3d is not None and self.cameras is None:
-            return None, self.batch_3d[:len(chunks)], self.batch_2d[:len(chunks)]
+            # return None, self.batch_3d[:len(chunks)], self.batch_2d[:len(chunks)]
+            return self.batch_3d[:len(chunks)], self.batch_2d[:len(chunks)]
         elif self.poses_3d is None:
             return self.batch_cam[:len(chunks)], None, self.batch_2d[:len(chunks)]
         else:
