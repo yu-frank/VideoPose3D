@@ -50,6 +50,7 @@ else:
 
 # set torch manual seed
 torch.manual_seed(args.seed)
+print('Use Seed: ', args.seed)
 
 use_pcl = args.use_pcl
 print('Use PCL: ', use_pcl)
