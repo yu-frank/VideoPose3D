@@ -48,6 +48,9 @@ elif args.dataset.startswith('custom'):
 else:
     raise KeyError('Invalid dataset')
 
+# set torch manual seed
+torch.manual_seed(args.seed)
+
 use_pcl = args.use_pcl
 print('Use PCL: ', use_pcl)
 
