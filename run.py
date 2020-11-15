@@ -79,7 +79,7 @@ kps_left, kps_right = list(keypoints_symmetry[0]), list(keypoints_symmetry[1])
 joints_left, joints_right = list(dataset.skeleton().joints_left()), list(dataset.skeleton().joints_right())
 keypoints = keypoints['positions_2d'].item()
 
-augment_camera = True
+augment_camera = False
 print('Camera Augment: ', augment_camera)
 if augment_camera:
     Ks_px_orig = torch.FloatTensor([
