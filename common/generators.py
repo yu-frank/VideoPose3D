@@ -178,7 +178,7 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                     [0,    0,   1]
                 ]).unsqueeze(0)
 
-                augment_camera = True
+                augment_camera = False
                 if augment_camera:
                     Ks_px_new = Ks_px_orig.clone()
                     f_factor = 0.6666
