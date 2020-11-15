@@ -210,9 +210,11 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                 pose2d_pt_pcl = pose2d_virt * 2 -1 
                 # temp = pose2d_pt_pcl[middle_index]
                 """NEW"""
-                max_scale = torch.max(scale)
-                new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
-                pose2d_pt_pcl = (pose2d_pt_pcl * (new_scale / 1000)) + location_py
+                add_back_scale = 0
+                if add_back_scale:
+                    max_scale = torch.max(scale)
+                    new_scale = torch.FloatTensor([max_scale, max_scale]).unsqueeze(0)
+                    pose2d_pt_pcl = (pose2d_pt_pcl * (new_scale / 1000)) + location_py
                 self.batch_2d[i] = pose2d_pt_pcl.numpy()
 
                 
