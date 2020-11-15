@@ -79,7 +79,7 @@ kps_left, kps_right = list(keypoints_symmetry[0]), list(keypoints_symmetry[1])
 joints_left, joints_right = list(dataset.skeleton().joints_left()), list(dataset.skeleton().joints_right())
 keypoints = keypoints['positions_2d'].item()
 
-augment_camera = False
+augment_camera = True
 print('Camera Augment: ', augment_camera)
 if augment_camera:
     Ks_px_orig = torch.FloatTensor([
@@ -88,9 +88,14 @@ if augment_camera:
                         [0,    0,   1]]
                     )
     Ks_px_new = Ks_px_orig.clone()
-    f_factor = 0.6666
-    Ks_px_new[0,0] *= f_factor
-    Ks_px_new[1,1] *= f_factor
+    # changing f
+    # f_factor = 0.6666
+    # Ks_px_new[0,0] *= f_factor
+    # Ks_px_new[1,1] *= f_factor
+    # changing t
+    t_factor = 0.6666
+    Ks_px_new[0,2] *= t_factor
+    Ks_px_new[1,2] *= t_factor
 
     K_change = Ks_px_new @ torch.inverse(Ks_px_orig)
     K_change = K_change.unsqueeze(0)
