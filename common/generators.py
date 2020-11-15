@@ -171,11 +171,22 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                 
                 scale = pdh.generate_gt_scales_from2d(pose2d_middle).unsqueeze(0)
                 location = pose2d_middle[0,:].unsqueeze(0)
+
                 Ks_px_orig = torch.FloatTensor([
                     [1.145e3, 0, 5.0e2],
                     [0, 1.145e3, 5.0e2],
                     [0,    0,   1]
                 ]).unsqueeze(0)
+
+                augment_camera = True
+                if augment_camera:
+                    Ks_px_new = Ks_px_orig.clone()
+                    f_factor = 0.6666
+                    Ks_px_new[:,0,0] *= f_factor
+                    Ks_px_new[:,1,1] *= f_factor
+
+                    Ks_px_orig = Ks_px_new
+
 
                 P_virt2orig, R_virt2orig, K_virt = pcl.pcl_transforms(location, scale, Ks_px_orig,\
                     focal_at_image_plane=True, slant_compensation=True)

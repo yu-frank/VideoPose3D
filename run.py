@@ -79,6 +79,34 @@ kps_left, kps_right = list(keypoints_symmetry[0]), list(keypoints_symmetry[1])
 joints_left, joints_right = list(dataset.skeleton().joints_left()), list(dataset.skeleton().joints_right())
 keypoints = keypoints['positions_2d'].item()
 
+augment_camera = True
+if augment_camera:
+    Ks_px_orig = torch.FloatTensor([
+                        [1.145e3, 0, 5.0e2],
+                        [0, 1.145e3, 5.0e2],
+                        [0,    0,   1]]
+                    )
+    Ks_px_new = Ks_px_orig.clone()
+    f_factor = 0.6666
+    Ks_px_new[0,0] *= f_factor
+    Ks_px_new[1,1] *= f_factor
+
+    K_change = Ks_px_new @ torch.inverse(Ks_px_orig)
+    K_change = K_change.unsqueeze(0)
+
+    for subject in dataset.subjects():
+        for action in dataset[subject].keys():
+            for cam_idx in range(len(keypoints[subject][action])):
+                kps = torch.from_numpy(keypoints[subject][action][cam_idx])
+                # kps = kps.view([-1,2])
+                ones = torch.ones([kps.shape[0], kps.shape[1], 1])
+                h_kps = torch.cat((kps, ones), dim=-1)
+                K_batch = K_change.expand([h_kps.shape[0],3,3])
+                kps_new  = torch.bmm(K_batch, h_kps.permute(0,2,1)).permute(0,2,1)
+                ones_ = kps_new[:,:,2]
+                #ones_ = torch.sum(ones_)/ones_.shape()
+                keypoints[subject][action][cam_idx] = kps_new[:,:,:2].numpy()
+
 for subject in dataset.subjects():
     assert subject in keypoints, 'Subject {} is missing from the 2D detections dataset'.format(subject)
     for action in dataset[subject].keys():

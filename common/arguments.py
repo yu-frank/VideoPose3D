@@ -12,7 +12,7 @@ def parse_args():
 
     # General arguments
     parser.add_argument('--use_pcl', default=False, type=bool, metavar='NAME', help='target dataset')
-    parser.add_argument('--num_workers', default=8, type=int, metavar='NAME')
+    parser.add_argument('--num_workers', default=0, type=int, metavar='NAME')
     parser.add_argument('--seed', default=1, type=int, metavar='NAME')
     parser.add_argument('-d', '--dataset', default='h36m', type=str, metavar='NAME', help='target dataset') # h36m or humaneva
     parser.add_argument('-k', '--keypoints', default='cpn_ft_h36m_dbb', type=str, metavar='NAME', help='2D detections to use')
