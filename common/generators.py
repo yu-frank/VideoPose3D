@@ -237,7 +237,7 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                 #     pdh.plot_the_before_after_skeletons_3d(before_3d, self.batch_3d[i])
 
 
-            if not self.use_pcl:
+            # if not self.use_pcl:
             #     """# Code used for centering"""
             #     temp = self.batch_2d[i]
             #     middle_index = temp.shape[0]//2
