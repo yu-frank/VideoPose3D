@@ -34,7 +34,7 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                  chunk_length, pad=0, causal_shift=0,
                  shuffle=True, random_seed=1234,
                  augment=False, kps_left=None, kps_right=None, joints_left=None, joints_right=None,
-                 endless=False, use_pcl=False):
+                 endless=False, use_pcl=False, augment_camera=False, camera_augment_type=0):
         assert poses_3d is None or len(poses_3d) == len(poses_2d), (len(poses_3d), len(poses_2d))
         assert cameras is None or len(cameras) == len(poses_2d)
     
@@ -68,6 +68,8 @@ class ChunkedGenerator(torch.utils.data.Dataset):
         self.state = None
 
         self.use_pcl = use_pcl
+        self.augment_camera = augment_camera
+        self.camera_augment_type = camera_augment_type
         
         self.cameras = cameras
         self.poses_3d = poses_3d
@@ -178,17 +180,19 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                     [0,    0,   1]
                 ]).unsqueeze(0)
 
-                augment_camera = False
-                if augment_camera:
+                # augment_camera = False
+                if self.augment_camera:
                     Ks_px_new = Ks_px_orig.clone()
-                    # changing f
-                    # f_factor = 0.6666
-                    # Ks_px_new[:,0,0] *= f_factor
-                    # Ks_px_new[:,1,1] *= f_factor
-                    # changing t
-                    t_factor = 0.8
-                    Ks_px_new[:,0,2] *= t_factor
-                    Ks_px_new[:,1,2] *= t_factor
+                    if self.camera_augment_type:
+                        # changing f
+                        f_factor = 0.6666
+                        Ks_px_new[:,0,0] *= f_factor
+                        Ks_px_new[:,1,1] *= f_factor
+                    else:
+                        # changing t
+                        t_factor = 0.8
+                        Ks_px_new[:,0,2] *= t_factor
+                        Ks_px_new[:,1,2] *= t_factor
 
                     Ks_px_orig = Ks_px_new
 

@@ -14,6 +14,10 @@ def parse_args():
     parser.add_argument('--use_pcl', default=False, type=bool, metavar='NAME', help='target dataset')
     parser.add_argument('--num_workers', default=0, type=int, metavar='NAME')
     parser.add_argument('--seed', default=1, type=int, metavar='NAME')
+    parser.add_argument('--run_camera_augment', default=0, type=int, metavar='NAME')
+    parser.add_argument('--generator_camera_augment', default=0, type=int, metavar='NAME')
+    parser.add_argument('--camera_augment_type', default=0, type=int, metavar='NAME')
+
     parser.add_argument('-d', '--dataset', default='h36m', type=str, metavar='NAME', help='target dataset') # h36m or humaneva
     parser.add_argument('-k', '--keypoints', default='cpn_ft_h36m_dbb', type=str, metavar='NAME', help='2D detections to use')
     parser.add_argument('-str', '--subjects-train', default='S1,S5,S6,S7,S8', type=str, metavar='LIST',

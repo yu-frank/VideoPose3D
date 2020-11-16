@@ -79,7 +79,7 @@ kps_left, kps_right = list(keypoints_symmetry[0]), list(keypoints_symmetry[1])
 joints_left, joints_right = list(dataset.skeleton().joints_left()), list(dataset.skeleton().joints_right())
 keypoints = keypoints['positions_2d'].item()
 
-augment_camera = False
+augment_camera = args.run_camera_augment
 print('Camera Augment: ', augment_camera)
 if augment_camera:
     Ks_px_orig = torch.FloatTensor([
@@ -88,14 +88,18 @@ if augment_camera:
                         [0,    0,   1]]
                     )
     Ks_px_new = Ks_px_orig.clone()
-    # changing f
-    # f_factor = 0.6666
-    # Ks_px_new[0,0] *= f_factor
-    # Ks_px_new[1,1] *= f_factor
-    # changing t
-    t_factor = 0.8
-    Ks_px_new[0,2] *= t_factor
-    Ks_px_new[1,2] *= t_factor
+    if args.camera_augment_type:
+        # changing f
+        f_factor = 0.6666
+        Ks_px_new[0,0] *= f_factor
+        Ks_px_new[1,1] *= f_factor
+        print('Run Augment: f')
+    else:
+        # changing t
+        t_factor = 0.8
+        Ks_px_new[0,2] *= t_factor
+        Ks_px_new[1,2] *= t_factor
+        print('Run Augment: t')
 
     K_change = Ks_px_new @ torch.inverse(Ks_px_orig)
     K_change = K_change.unsqueeze(0)
@@ -270,9 +274,11 @@ if args.resume or args.evaluate:
 #                                     pad=pad, causal_shift=causal_shift, augment=False,
 #                                     kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)
 
+print('generator camera augment: ', args.generator_camera_augment)
 test_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_valid, poses_valid, poses_valid_2d, args.stride,
                                        pad=pad, causal_shift=causal_shift, shuffle=False, augment=False,
-                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)  
+                                       kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl,
+                                       augment_camera=args.generator_camera_augment, type_camera_augment=args.camera_augment_type)  
 
 print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
 
@@ -947,7 +953,8 @@ else:
 
             gen = ChunkedGenerator(args.batch_size//args.stride, None, poses_act, poses_2d_act, args.stride,
                             pad=pad, causal_shift=causal_shift, shuffle=False, augment=False,
-                            kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl)  
+                            kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl, 
+                            augment_camera=args.generator_camera_augment, type_camera_augment=args.camera_augment_type)  
             e1, e2, e3, ev = evaluate(gen, action_key)
             errors_p1.append(e1)
             errors_p2.append(e2)
