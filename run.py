@@ -93,7 +93,7 @@ if augment_camera:
     # Ks_px_new[0,0] *= f_factor
     # Ks_px_new[1,1] *= f_factor
     # changing t
-    t_factor = 0.6666
+    t_factor = 0.8
     Ks_px_new[0,2] *= t_factor
     Ks_px_new[1,2] *= t_factor
 
