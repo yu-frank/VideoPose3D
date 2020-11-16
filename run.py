@@ -278,7 +278,7 @@ print('generator camera augment: ', args.generator_camera_augment)
 test_generator = ChunkedGenerator(args.batch_size//args.stride, cameras_valid, poses_valid, poses_valid_2d, args.stride,
                                        pad=pad, causal_shift=causal_shift, shuffle=False, augment=False,
                                        kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl,
-                                       augment_camera=args.generator_camera_augment, type_camera_augment=args.camera_augment_type)  
+                                       augment_camera=args.generator_camera_augment, camera_augment_type=args.camera_augment_type)  
 
 print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
 
@@ -954,7 +954,7 @@ else:
             gen = ChunkedGenerator(args.batch_size//args.stride, None, poses_act, poses_2d_act, args.stride,
                             pad=pad, causal_shift=causal_shift, shuffle=False, augment=False,
                             kps_left=kps_left, kps_right=kps_right, joints_left=joints_left, joints_right=joints_right, use_pcl=use_pcl, 
-                            augment_camera=args.generator_camera_augment, type_camera_augment=args.camera_augment_type)  
+                            augment_camera=args.generator_camera_augment, camera_augment_type=args.camera_augment_type)  
             e1, e2, e3, ev = evaluate(gen, action_key)
             errors_p1.append(e1)
             errors_p2.append(e2)
