@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument('--run_camera_augment', default=0, type=int, metavar='NAME')
     parser.add_argument('--generator_camera_augment', default=0, type=int, metavar='NAME')
     parser.add_argument('--camera_augment_type', default=0, type=int, metavar='NAME')
+    parser.add_argument('--baseline_centerd', default=0, type=int, metavar='NAME')
 
     parser.add_argument('-d', '--dataset', default='h36m', type=str, metavar='NAME', help='target dataset') # h36m or humaneva
     parser.add_argument('-k', '--keypoints', default='cpn_ft_h36m_dbb', type=str, metavar='NAME', help='2D detections to use')

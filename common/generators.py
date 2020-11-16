@@ -34,7 +34,7 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                  chunk_length, pad=0, causal_shift=0,
                  shuffle=True, random_seed=1234,
                  augment=False, kps_left=None, kps_right=None, joints_left=None, joints_right=None,
-                 endless=False, use_pcl=False, augment_camera=False, camera_augment_type=0):
+                 endless=False, use_pcl=False, augment_camera=False, camera_augment_type=0, baseline_centered=False):
         assert poses_3d is None or len(poses_3d) == len(poses_2d), (len(poses_3d), len(poses_2d))
         assert cameras is None or len(cameras) == len(poses_2d)
     
@@ -70,7 +70,8 @@ class ChunkedGenerator(torch.utils.data.Dataset):
         self.use_pcl = use_pcl
         self.augment_camera = augment_camera
         self.camera_augment_type = camera_augment_type
-        
+        self.baseline_centered = baseline_centered
+
         self.cameras = cameras
         self.poses_3d = poses_3d
         self.poses_2d = poses_2d
@@ -246,7 +247,7 @@ class ChunkedGenerator(torch.utils.data.Dataset):
                 #     pdh.plot_the_before_after_skeletons_3d(before_3d, self.batch_3d[i])
 
 
-            if not self.use_pcl:
+            if not self.use_pcl and self.baseline_centered:
                 """# Code used for centering"""
                 temp = self.batch_2d[i]
                 middle_index = temp.shape[0]//2
